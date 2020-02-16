@@ -6,7 +6,7 @@ Why do we need NCCL on Mac OS X? Because when using [pytorch-osx-build](http://g
 
 With the NCCL migration, GLOO can be compiled on Mac OS X and works fine as a ditributed GPU backend of Pytorch. However, using of NCCL backend of Pytorch will fail at "unhandled system error" and I cannot figure out the cause.
 
-``Long story short, this migration is NOT fully functional, but it helps enable distributed GPU training for [pytorch-osx-build](http://github.com/TomHeaven/pytorch-osx-build) through GLOO backend.`` 
+Long story short, this migration is NOT fully functional, but it helps enable distributed GPU training for [pytorch-osx-build](http://github.com/TomHeaven/pytorch-osx-build) through GLOO backend. 
 
 ## Introduction
 
