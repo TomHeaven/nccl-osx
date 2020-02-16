@@ -1,6 +1,12 @@
-# NCCL
+# NCCL-OSX
 
-Optimized primitives for collective multi-GPU communication.
+Optimized primitives for collective multi-GPU communication migrated to Mac OS X (10.13 - 10.13.6).
+
+Why do we need NCCL on Mac OS X? Because when using [pytorch-osx-build](http://github.com/TomHeaven/pytorch-osx-build), I found some objection detection frameworks use distributed GPU training, which requires at least one distributed GPU backend functional. GPU backends of Pytorch consists of NCCL and GLOO. GLOO is dependent of NCCL. Thus, we need NCCL.
+
+With the NCCL migration, GLOO can be compiled on Mac OS X and works fine as a ditributed GPU backend of Pytorch. However, using of NCCL backend of Pytorch will fail at "unhandled system error" and I cannot figure out the cause.
+
+``Long story short, this migration is NOT fully functional, but it helps enable distributed GPU training for [pytorch-osx-build](http://github.com/TomHeaven/pytorch-osx-build) through GLOO backend.`` 
 
 ## Introduction
 
@@ -12,11 +18,11 @@ For more information on NCCL usage, please refer to the [NCCL documentation](htt
 
 At present, the library implements the following collectives operations:
 
-- all-reduce
-- all-gather
-- reduce-scatter
-- reduce
-- broadcast
+- all-reduce 【Not working】
+- all-gather 【Not tested】
+- reduce-scatter 【Working】
+- reduce     【Not tested】
+- broadcast  【Not tested】
 
 These operations are implemented using ring algorithms and have been optimized for throughput and latency. For best performance, small operations can be either batched into larger operations or aggregated through the API.
 
@@ -25,6 +31,8 @@ These operations are implemented using ring algorithms and have been optimized f
 NCCL requires at least CUDA 7.0 and Kepler or newer GPUs. For PCIe based platforms, best performance is achieved when all GPUs are located on a common PCIe root complex, but multi-socket configurations are also supported.
 
 ## Build
+
+To install NCCL on Mac OS X 10.13, first ensure Homebrew, XCode 9(.4.1) and CUDA-SDK (10.0 or 10.1) are properly installed. 
 
 Note: the official and tested builds of NCCL can be downloaded from: https://developer.nvidia.com/nccl. You can skip the following build steps if you choose to use the official builds.
 
@@ -50,43 +58,22 @@ $ make -j src.build NVCC_GENCODE="-gencode=arch=compute_70,code=sm_70"
 
 ## Install
 
-To install NCCL on the system, create a package then install it as root.
+Simply run
+```
+make install
 
-Debian/Ubuntu :
-```shell
-$ # Install tools to create debian packages
-$ sudo apt install build-essential devscripts debhelper fakeroot
-$ # Build NCCL deb package
-$ make pkg.debian.build
-$ ls build/pkg/deb/
 ```
 
-RedHat/CentOS :
-```shell
-$ # Install tools to create rpm packages
-$ sudo yum install rpm-build rpmdevtools
-$ # Build NCCL rpm package
-$ make pkg.redhat.build
-$ ls build/pkg/rpm/
-```
 
-OS-agnostic tarball :
-```shell
-$ make pkg.txz.build
-$ ls build/pkg/txz/
-```
 
 ## Tests
 
-Tests for NCCL are maintained separately at https://github.com/nvidia/nccl-tests.
+There are problems compilating [nccl-tests](https://github.com/nvidia/nccl-tests.) on Mac OS X.
 
-```shell
-$ git clone https://github.com/NVIDIA/nccl-tests.git
-$ cd nccl-tests
-$ make
-$ ./build/all_reduce_perf -b 8 -e 256M -f 2 -g <ngpus>
-```
+In fact, not all functions of NCCL works on Mac OS X. This project is to help Pytorch-osx-build
 
 ## Copyright
 
 All source code and accompanying documentation is copyright (c) 2015-2019, NVIDIA CORPORATION. All rights reserved.
+
+Migration to Mac OS X is done by [TomHeaven](https://github.com/TomHeaven/nccl-osx).
