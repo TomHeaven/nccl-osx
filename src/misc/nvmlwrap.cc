@@ -37,7 +37,7 @@ ncclResult_t wrapNvmlSymbols(void) {
 
   if (__sync_bool_compare_and_swap(&nvmlState, nvmlUninitialized, nvmlInitializing) == false) {
     // Another thread raced in front of us. Wait for it to be done.
-    while (nvmlState == nvmlInitializing) pthread_yield();
+    while (nvmlState == nvmlInitializing) pthread_yield_np();
     return (nvmlState == nvmlInitialized) ? ncclSuccess : ncclSystemError;
   }
 

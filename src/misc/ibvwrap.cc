@@ -48,7 +48,7 @@ ncclResult_t wrap_ibv_symbols(void) {
 
   if (__sync_bool_compare_and_swap(&ibvState, ibvUninitialized, ibvInitializing) == false) {
     // Another thread raced in front of us. Wait for it to be done.
-    while (ibvState == ibvInitializing) pthread_yield();
+    while (ibvState == ibvInitializing) pthread_yield_np();
     return (ibvState == ibvInitialized) ? ncclSuccess : ncclSystemError;
   }
 
@@ -67,9 +67,9 @@ ncclResult_t wrap_ibv_symbols(void) {
 
 #define LOAD_SYM(handle, symbol, funcptr) do {         \
     cast = (void**)&funcptr;                             \
-    tmp = dlvsym(handle, symbol, IBVERBS_VERSION);       \
+    tmp = dlsym(handle, symbol);       \
     if (tmp == NULL) {                                   \
-      WARN("dlvsym failed on %s - %s version %s", symbol, dlerror(), IBVERBS_VERSION);  \
+      WARN("dlsym failed on %s - %s version %s", symbol, dlerror(), IBVERBS_VERSION);  \
       goto teardown;                                     \
     }                                                    \
     *cast = tmp;                                         \

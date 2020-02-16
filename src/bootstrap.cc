@@ -170,7 +170,8 @@ static void *bootstrapRoot(void* listenComm) {
   ncclNetHandle_t zero = { 0 }; // for sanity checking
   void* tmpComm;
   ncclResult_t res;
-  setFilesLimit();
+  // setrlimit cause warning on osx: [0] bootstrap.cc:162 NCCL WARN Call to setrlimit failed : Invalid argument 
+  setFilesLimit(); 
 
   TRACE(NCCL_INIT, "BEGIN");
   /* Receive addresses from all ranks */

@@ -7,6 +7,11 @@
 #ifndef NCCL_CPUSET_H_
 #define NCCL_CPUSET_H_
 
+typedef struct cpu_set {
+  uint32_t    count;
+} cpu_set_t;
+
+
 // Convert local_cpus, e.g. 0003ff,f0003fff to cpu_set_t
 
 static int hexToInt(char c) {

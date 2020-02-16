@@ -164,7 +164,7 @@ ncclResult_t ncclGroupEnd() {
     for (int i=0; i<ncclGroupIndex; i++) {
       struct ncclAsyncArgs* args = ncclGroupArgs+i;
       if (args->funcType == ASYNC_FUNC_INIT && doneArray[i] == 0) {
-        int err = pthread_tryjoin_np(ncclGroupThreads[i], NULL);
+        int err = pthread_threadid_np(ncclGroupThreads[i], NULL);
         if (err == EBUSY) continue;
         if (err != 0) ret = ncclSystemError;
         if (args->ret != ncclSuccess) ret = args->ret;

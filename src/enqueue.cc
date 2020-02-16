@@ -138,7 +138,7 @@ ncclResult_t ncclCpuBarrierLast(struct ncclComm* comm) {
 
 ncclResult_t ncclCpuBarrierOut(struct ncclComm* comm) {
   volatile int* ptr = (volatile int*)(comm->intraBarrier+comm->intraPhase);
-  while (*ptr < comm->intraRanks) pthread_yield();
+  while (*ptr < comm->intraRanks) pthread_yield_np();
   comm->intraPhase ^= 1;
   return ncclSuccess;
 }
