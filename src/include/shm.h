@@ -15,7 +15,7 @@
 ///// for mac os x
 #include <unistd.h>
 #include <sys/types.h>
-bool posix_fallocate(int fd const int aLength) 
+bool posix_fallocate(int fd, const int aLength) 
 {
   fstore_t store = {F_ALLOCATECONTIG, F_PEOFPOSMODE, 0, aLength};
   // Try to get a continous chunk of disk space
