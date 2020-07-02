@@ -34,7 +34,7 @@ ncclResult_t wrapNvmlSymbols(void) {
     return ncclSuccess;
   if (nvmlState == nvmlError)
     return ncclSystemError;
-
+  printf("flag nnvmlwarp 0\n");
   if (__sync_bool_compare_and_swap(&nvmlState, nvmlUninitialized, nvmlInitializing) == false) {
     // Another thread raced in front of us. Wait for it to be done.
     while (nvmlState == nvmlInitializing) pthread_yield_np();
@@ -44,13 +44,14 @@ ncclResult_t wrapNvmlSymbols(void) {
   static void* nvmlhandle = NULL;
   void* tmp;
   void** cast;
-
+  printf("flag nnvmlwarp 1\n");
   nvmlhandle=dlopen("libnvidia-ml.so.1", RTLD_NOW);
   if (!nvmlhandle) {
+    printf("flag nnvmlwarp 2\n");
     WARN("Failed to open libnvidia-ml.so.1");
     goto teardown;
   }
-
+  
 #define LOAD_SYM(handle, symbol, funcptr) do {         \
     cast = (void**)&funcptr;                             \
     tmp = dlsym(handle, symbol);                         \
@@ -82,6 +83,8 @@ ncclResult_t wrapNvmlSymbols(void) {
   LOAD_SYM_OPTIONAL(nvmlhandle, "nvmlDeviceGetNvLinkRemotePciInfo", nvmlInternalDeviceGetNvLinkRemotePciInfo);
   LOAD_SYM_OPTIONAL(nvmlhandle, "nvmlDeviceGetNvLinkCapability", nvmlInternalDeviceGetNvLinkCapability);
   LOAD_SYM(nvmlhandle, "nvmlDeviceGetCudaComputeCapability", nvmlInternalDeviceGetCudaComputeCapability);
+
+  printf("flag nnvmlwarp 3\n");
 
   nvmlState = nvmlInitialized;
   return ncclSuccess;

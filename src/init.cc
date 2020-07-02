@@ -790,23 +790,24 @@ static ncclResult_t setCpuAffinity(int cudaDev) {
 
 ncclResult_t ncclCommInitRankSync(ncclComm_t* newcomm, int nranks, ncclUniqueId commId, int myrank, int cudaDev) {
   cpu_set_t affinitySave;
+  printf("flag init 0\n");
   sched_getaffinity(0, sizeof(cpu_set_t), &affinitySave);
-
+  printf("flag init 1\n");
   NCCLCHECK(wrapNvmlSymbols());
+  printf("flag init 2\n");
   NCCLCHECK(wrapNvmlInit());
-
+  printf("flag init 3\n");
   // Make sure all host memory allocation are close to the GPU
   CUDACHECK(cudaSetDevice(cudaDev));
   NCCLCHECK(setCpuAffinity(cudaDev));
   ncclResult_t res;
-
+ 
   NCCLCHECKGOTO(commAlloc(newcomm, nranks, myrank), res, cleanup);
   NCCLCHECKGOTO(initTransportsRank(*newcomm, &commId), res, cleanup);
   NCCLCHECKGOTO(devCommSetup(*newcomm), res, cleanup);
-
+  printf("flag init 4\n");
   sched_setaffinity(0, sizeof(cpu_set_t), &affinitySave);
   NCCLCHECKGOTO(wrapNvmlShutdown(), res, cleanup);
-
   INFO(NCCL_INIT,"comm %p rank %d nranks %d cudaDev %d busId %x - Init COMPLETE", *newcomm, myrank, nranks, (*newcomm)->cudaDev, (*newcomm)->busId);
 
   return ncclSuccess;
@@ -837,9 +838,12 @@ static ncclResult_t ncclCommInitRankDev(ncclComm_t* newcomm, int nranks, ncclUni
     goto end;
   }
 
-  if (ncclAsyncMode()) {
+  if (0) {
+  //if (ncclAsyncMode()) {
+    printf("ncclAysncMode()\n");
     NCCLCHECKGOTO(ncclAsyncInit(ncclCommInitRankSync, newcomm, nranks, commId, myrank, cudaDev), res, end);
   } else {
+    printf("NOT ncclAysncMode()\n");
     NCCLCHECKGOTO(ncclCommInitRankSync(newcomm, nranks, commId, myrank, cudaDev), res, end);
   }
 end:
@@ -862,15 +866,17 @@ ncclResult_t ncclCommInitAll(ncclComm_t* comms, int ndev, const int* devlist) {
     WARN("Invalid device count requested : %d", ndev);
     return ncclInvalidArgument;
   }
-
   ncclUniqueId uniqueId;
   NCCLCHECK(ncclGetUniqueId(&uniqueId));
+  printf("init nccl uniqueID %s\n", uniqueId.internal);
   NCCLCHECK(ncclGroupStart());
   for (int i=0; i<ndev; i++) {
     // Ignore return codes .. we need to call ncclGroupEnd to clean up anyway
     ncclCommInitRankDev(comms+i, ndev, uniqueId, i, devlist ? devlist[i] : i);
   }
+  printf("flag3 %d\n", ncclSuccess);
   NCCLCHECK(ncclGroupEnd());
+  printf("flag4 %d\n", ncclSuccess);
   return ncclSuccess;
 }
 

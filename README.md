@@ -1,5 +1,8 @@
 # NCCL-OSX
 
+``Unfortunately, this project will never work unless Nvidia releases a working shared library named libnvidia-ml.so for macOS.`` 
+I find in nvmlwarp.cc that libnvidia-ml.so is required to load some dynamic symbols, which is necessary to make ncclCommInitRankDev() work. However, the library libnvidia-ml seems to be available only for Linux or Windows.
+
 Optimized primitives for collective multi-GPU communication migrated to Mac OS X (10.13 - 10.13.6).
 
 Why do we need NCCL on Mac OS X? Because when using [pytorch-osx-build](http://github.com/TomHeaven/pytorch-osx-build), I found some objection detection frameworks use distributed GPU training, which requires at least one distributed GPU backend functional. GPU backends of Pytorch consists of NCCL and GLOO. GLOO is dependent of NCCL. Thus, we need NCCL.

@@ -14,6 +14,8 @@ thread_local int ncclGroupIndex = 0;
 thread_local int ncclGroupMode = 0;
 thread_local ncclResult_t ncclGroupError = ncclSuccess;
 
+#define pthread_tryjoin_np(THR, RETVAL)  pthread_detach((THR))
+
 bool ncclAsyncMode() {
   return ncclGroupMode > 0;
 }
@@ -78,6 +80,7 @@ ncclResult_t ncclAsyncInit(ncclInitFunc_t func, ncclComm_t* newcomm, int ndev, n
   args->init.ndev = ndev;
   memcpy(&args->init.commId, &commId, sizeof(commId));
   args->init.myrank = myrank;
+  printf("group ncclAysncInit newcomm %ld, ndev %d, myrank %d, cudaDev %d, ncclSuccess %d\n", newcomm, ndev, myrank, cudaDev, ncclSuccess);
   return ncclSuccess;
 }
 
@@ -115,7 +118,7 @@ ncclResult_t ncclGroupEnd() {
 
   ncclResult_t ret = ncclGroupError;
   if (ret != ncclSuccess) goto group_cleanup;
-
+  printf("flag3.2 %d, ret %d\n", ncclSuccess, ret);
   /* Launch async ncclCommInitRank */
   for (int i=0; i<ncclGroupIndex; i++) {
     struct ncclAsyncArgs* args = ncclGroupArgs+i;
@@ -141,6 +144,7 @@ ncclResult_t ncclGroupEnd() {
       NCCLCHECKGOTO(ncclBarrierEnqueue(args->coll.comm), ret, end);
     }
   }
+
   for (int i=0; i<ncclGroupIndex; i++) {
     struct ncclAsyncArgs* args = ncclGroupArgs+i;
     if (args->funcType == ASYNC_FUNC_COLL) {
@@ -148,6 +152,7 @@ ncclResult_t ncclGroupEnd() {
       NCCLCHECKGOTO(ncclBarrierEnqueueWait(args->coll.comm), ret, end);
     }
   }
+
   for (int i=0; i<ncclGroupIndex; i++) {
     struct ncclAsyncArgs* args = ncclGroupArgs+i;
     if (args->funcType == ASYNC_FUNC_COLL) {
@@ -158,23 +163,34 @@ ncclResult_t ncclGroupEnd() {
       done--;
     }
   }
-
+  printf("flag3.3 %d, ret %d\n", ncclSuccess, ret);
   /* For init, since we use threads, we just wait for threads to complete */
   while (done) {
     for (int i=0; i<ncclGroupIndex; i++) {
       struct ncclAsyncArgs* args = ncclGroupArgs+i;
+      printf("0 args->ret %d\n", args->ret);
       if (args->funcType == ASYNC_FUNC_INIT && doneArray[i] == 0) {
-        int err = pthread_threadid_np(ncclGroupThreads[i], NULL);
+        int err = pthread_tryjoin_np(ncclGroupThreads[i], NULL);
+        //int err = pthread_join(ncclGroupThreads[i], NULL);
+        printf("ncclGroupEnd thread %d, err %d, EBUSY %d\n", ncclGroupThreads[i], err, EBUSY);
         if (err == EBUSY) continue;
-        if (err != 0) ret = ncclSystemError;
-        if (args->ret != ncclSuccess) ret = args->ret;
+        if (err != 0) {
+          printf("ncclGroupEnd err %d, ncclSystemError %d\n", err, ncclSystemError);
+          ret = ncclSystemError;
+        }
+        if (args->ret != ncclSuccess) {
+          printf("args->ret %d\n", args->ret);
+          ret = args->ret;
+        }
         doneArray[i] = 1;
         done--;
       }
     }
   }
+  printf("flag3.3.1 %d, ret %d\n", ncclSuccess, ret);
   goto end;
 group_cleanup:
+  printf("flag3.4 %d, ret %d\n", ncclSuccess, ret);
   if (ret != ncclSuccess) {
     // At least one call in the group failed. Since we want to make that group
     // an atomic operation, we need to cancel all operations.
@@ -220,6 +236,8 @@ group_cleanup:
 end:
   ncclGroupError = ncclSuccess;
   ncclGroupIndex = 0;
+  printf("flag3.5 %d, ret %d\n", ncclSuccess, ret);
   CUDACHECK(cudaSetDevice(savedDev)); // do other clean-ups first before calling cudaSetDevice, because this call can fail too
+  printf("flag3.6 ncclSuccess %d, ret %d\n", ncclSuccess, ret);
   return ret;
 }
