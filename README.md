@@ -1,7 +1,7 @@
 # NCCL-OSX
 
 ``Unfortunately, this project will never work unless Nvidia releases a working shared library named libnvidia-ml.so for macOS.`` 
-I find in nvmlwarp.cc that libnvidia-ml.so is required to load some dynamic symbols, which is necessary to make ncclCommInitRankDev() work. However, the library libnvidia-ml seems to be available only for Linux or Windows.
+I find in nvmlwarp.cc that libnvidia-ml.so is required to load some symbols, which is necessary to make ncclCommInitRankDev() work. However, the library libnvidia-ml seems to be available only on Linux or Windows.
 
 Optimized primitives for collective multi-GPU communication migrated to Mac OS X (10.13 - 10.13.6).
 
